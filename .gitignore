@@ -1,0 +1,26 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+.python-version
+# Editors
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# dbt
+dbt_project/target/
+dbt_project/dbt_packages/
+dbt_project/logs/
+dbt_project/.user.yml
+
+# Local state and logs
+logs/
+state/
+*.duckdb
+*.duckdb.wal
+
+# Secrets
+.env
+*.pem
