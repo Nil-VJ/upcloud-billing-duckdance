@@ -57,4 +57,32 @@ A few choices I considered and rejected, in case it comes up:
 
 ## GDPR considerations
 
+The dataset contains a `user_id` column, which is personal data under GDPR even though it is a number rather than a name. A pipeline that handles billing data needs to take it seriously.
+
+### Data classification
+
+Looking at the 14 columns:
+
+- **Personal data:** `user_id`. Even though it is pseudonymous, it identifies an individual when combined with other systems. Under GDPR this still counts as personal data.
+- **Possibly personal in context:** `resource_id` and `invoice_id`. On their own they identify resources or transactions, not people. Joined with `user_id`, they become traceable to individuals.
+- **Not personal:** timestamp, credit_usage, region, service_tier, operation_type, success, resource_type, currency, year, month, day.
+
+The practical implication for this pipeline: raw and staging tables contain user_id and are in scope for GDPR. The aggregated marts group by dimensions like region, service_tier, and day, and drop user_id entirely. Those marts are out of GDPR scope because no individual can be identified from a row like '(us-chi1, 2024-01-01, -88M total credits)'. This is a deliberate design choice: aggregation is itself a form of GDPR data minimization.
+
+### Pseudonymization
+
+`user_id` looks already pseudonymous in this dataset (it is an integer, not an email or name). For marts, I aggregate by dimensions that do not include `user_id` whenever the use case allows. Where per-user data is needed, the right pattern is to keep `user_id` only in restricted tables and grant access only to roles that need it.
+
+### Retention and right to erasure
+
+Two tensions worth naming.
+
+**Retention.** Billing records and personal data want different lifespans. Billing records often need to be kept for years for audit and finance reasons. Personal data inside those records (the `user_id` column) should only be kept as long as the original purpose requires. The pipeline does not currently enforce retention rules. In production, a scheduled job would either delete or anonymize raw partitions older than the retention threshold, while keeping the aggregated marts intact.
+
+**Right to erasure.** If a user requests deletion, the raw partitions can be filtered to remove their rows. Aggregated marts are harder because that user's data is mixed into sums and averages across millions of others. The pragmatic answer: keep the raw data around so the marts can be recomputed if needed. For aggregates over very large groups, the values are anonymous enough that erasure typically does not apply to them.
+
+### Data residency
+
+UpCloud's value proposition includes European data sovereignty. For this pipeline, that means: source data stays in UpCloud Object Storage (European regions), the pipeline runs in European regions, and outputs land in European regions. DuckDB running on a developer's laptop is fine for this assignment, but in production the compute would run on European infrastructure too. This is not just a GDPR checkbox; it is the product story.
+
 ## Time spent
