@@ -12,7 +12,7 @@ The pipeline has four layers: storage, compute, transformation, and orchestratio
 
 Source data lives in UpCloud Object Storage as Hive-partitioned CSVs at `year=YYYY/month=MM/day=DD/billing.csv`. The bucket allows public HTTPS reads of specific files but rejects anonymous S3 LIST, so a glob like `year=*/month=*/day=*/billing.csv` does not work. I generate the list of partition URLs in Python and pass them to DuckDB explicitly. This is closer to how a real incremental pipeline behaves anyway, since you would not want to LIST the full bucket on every run.
 
-Marts are materialized as CSV files in a local outputs folder and as tables inside the DuckDB file. CSV because I assumed the downstream consumers here are humans — finance and BI analysts — who can open it directly. In production these would land in BigQuery as tables, and the local CSVs would be written back to UpCloud Object Storage through DuckDB's httpfs extension.
+Marts are materialized as tables inside the DuckDB file. A reviewer can open the file with the DuckDB CLI or any DuckDB-compatible tool and query the marts directly with SQL. In production these would land in BigQuery as tables, and the same dbt models would point at the BigQuery profile instead of the DuckDB profile.
 
 ### Compute: DuckDB
 
@@ -52,6 +52,20 @@ A few choices I considered and rejected, in case it comes up:
 ## Idempotency
 
 ## Running the pipeline
+
+Clone the repo and create a virtual environment with Python 3.12. Install dependencies: `pip install -r requirements.txt`
+
+Then run the pipeline from the repo root: `python ingestion/run_pipeline.py`
+
+This loads any new partitions from the bucket into a local `warehouse.duckdb` file, then runs `dbt build` to construct the staging, intermediate, and marts layers and execute all tests. The full chain runs end to end in one command.
+
+To inspect the output, open the DuckDB file from Python: `python -c "import duckdb; con = duckdb.connect('warehouse.duckdb'); print(con.execute('select * from mart_daily_usage_by_region limit 10').fetchdf())"`
+
+Re-running the pipeline is safe. Partitions that have already been loaded are skipped, and dbt rebuilds the marts against whatever data is currently in `raw_billing`.
+
+### A note on 404s
+
+The bucket adds new partitions over time. The pipeline tries every date from `START_DATE` to today, and partitions that do not yet exist return HTTP 404. These show up in the log as `WARNING Skipped YYYY-MM-DD: HTTP 404` and are expected. The next run picks them up automatically once the file appears in the bucket.
 
 ## Data lineage and catalog
 
