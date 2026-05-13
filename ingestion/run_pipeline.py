@@ -20,7 +20,6 @@ import duckdb
 
 BUCKET_BASE = "https://u1pfm.upcloudobjects.com/dwh-fina/billing"
 START_DATE = date(2024, 1, 1)
-# END_DATE = date(2024, 1, 3)  # TEMP: smoke test
 DB_PATH = Path("warehouse.duckdb")
 DBT_PROJECT_DIR = Path("dbt_project")
 LOG_DIR = Path("logs")
@@ -174,7 +173,6 @@ def main() -> None:
 
     processed = get_processed_dates(con)
     candidates = list(date_range(START_DATE, date.today()))
-    # candidates = list(date_range(START_DATE, END_DATE)) # TEMP: smoke test
     new_partitions = [d for d in candidates if d not in processed]
 
     log.info(
