@@ -4,6 +4,30 @@ A small billing data pipeline built for the UpCloud Senior Data Engineer assignm
 
 ## Setup
 
+The pipeline runs locally with Python 3.12 and uses DuckDB as the warehouse. No cloud accounts, containers, or external services are required.
+
+Clone the repo: 
+```
+git clone https://github.com/Nil-VJ/upcloud-billing-duckdance.git
+cd upcloud-billing-duckdance`
+```
+
+Create and activate a virtual environment:
+```
+python3.12 -m venv .venv
+source .venv/bin/activate
+```
+
+Install dependencies: ```pip install -r requirements.txt```
+
+The main dependencies are `duckdb`, `dbt-core`, and `dbt-duckdb`. Full versions are pinned in `requirements.txt`.
+
+That is the whole setup. The pipeline reads from a public bucket so no credentials are needed, and the `warehouse.duckdb` file is created automatically on first run.
+
+To verify the install before running the pipeline: ```dbt debug --project-dir dbt_project --profiles-dir dbt_project```
+
+This checks that the dbt project config, profile, and DuckDB connection are all working. All checks should pass.
+
 ## Architecture
 
 The pipeline has four layers: storage, compute, transformation, and orchestration. Each layer was picked to keep the architecture light and the dependencies few. The assignment explicitly asks for this and I agree with it for a dataset of this size.
@@ -99,6 +123,19 @@ The bucket adds new partitions over time. The pipeline tries every date from `ST
 
 ## Data lineage and catalog
 
+dbt generates both for free from the model files and YAML metadata.
+
+`dbt docs generate` compiles every model, source, and test into a JSON manifest. `dbt docs serve` starts a local web server that turns the manifest into a browsable catalog. Each model has its description, column descriptions, declared tests, source code, and compiled SQL on one page.
+
+The lineage graph shows the full DAG: `raw.raw_billing` (the source) flows into `stg_billing`, which flows into `int_billing_enriched`, which feeds both marts. Useful for two things in practice: explaining to a non-engineer where a number on a dashboard comes from, and troubleshooting when a test fails by walking back upstream until the bad input is found.
+
+Generate and view the docs with:
+
+```
+dbt docs generate --project-dir dbt_project --profiles-dir dbt_project
+dbt docs serve --project-dir dbt_project --profiles-dir dbt_project
+```
+
 ## GDPR considerations
 
 The dataset contains a `user_id` column, which is personal data under GDPR even though it is a number rather than a name. A pipeline that handles billing data needs to take it seriously.
@@ -130,3 +167,5 @@ Two tensions worth naming.
 UpCloud's value proposition includes European data sovereignty. For this pipeline, that means: source data stays in UpCloud Object Storage (European regions), the pipeline runs in European regions, and outputs land in European regions. DuckDB running on a developer's laptop is fine for this assignment, but in production the compute would run on European infrastructure too. This is not just a GDPR checkbox; it is the product story.
 
 ## Time spent
+
+Just over 3 hours of focused build time. Architecture and GDPR sections of this README were drafted beforehand as design notes; the rest was written during the build.
