@@ -1,0 +1,31 @@
+version: 2
+
+models:
+  - name: mart_daily_usage_by_region
+    description: "Daily billing aggregates by region and currency. One row per (operation_date, region, currency)."
+    columns:
+      - name: operation_date
+        tests:
+          - not_null
+      - name: region
+        tests:
+          - not_null
+      - name: currency
+        tests:
+          - not_null
+
+  - name: mart_usage_by_service_tier
+    description: "Daily billing aggregates by service tier and operation type. One row per (operation_date, service_tier, operation_type, currency)."
+    columns:
+      - name: operation_date
+        tests:
+          - not_null
+      - name: service_tier
+        tests:
+          - not_null
+      - name: operation_type
+        tests:
+          - not_null
+      - name: currency
+        tests:
+          - not_null
