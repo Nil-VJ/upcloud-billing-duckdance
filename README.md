@@ -19,14 +19,18 @@ source .venv/bin/activate
 ```
 
 Install dependencies: 
-```pip install -r requirements.txt```
+```
+pip install -r requirements.txt
+```
 
 The main dependencies are `duckdb`, `dbt-core`, and `dbt-duckdb`. Full versions are pinned in `requirements.txt`.
 
 That is the whole setup. The pipeline reads from a public bucket so no credentials are needed, and the `warehouse.duckdb` file is created automatically on first run.
 
 To verify the install before running the pipeline: 
-```dbt debug --project-dir dbt_project --profiles-dir dbt_project```
+```
+dbt debug --project-dir dbt_project --profiles-dir dbt_project
+```
 
 This checks that the dbt project config, profile, and DuckDB connection are all working. All checks should pass.
 
@@ -110,15 +114,21 @@ dbt itself is idempotent for free, because every model is either a view (rebuilt
 ## Running the pipeline
 
 Clone the repo and create a virtual environment with Python 3.12. Install dependencies: 
-```pip install -r requirements.txt```
+```
+pip install -r requirements.txt
+```
 
 Then run the pipeline from the repo root: 
-```python ingestion/run_pipeline.py```
+```
+python ingestion/run_pipeline.py
+```
 
 This loads any new partitions from the bucket into a local `warehouse.duckdb` file, then runs `dbt build` to construct the staging, intermediate, and marts layers and execute all tests. The full chain runs end to end in one command.
 
 To inspect the output, open the DuckDB file from Python: 
-```python -c "import duckdb; con = duckdb.connect('warehouse.duckdb'); print(con.execute('select * from mart_daily_usage_by_region limit 10').fetchdf())"```
+```
+python -c "import duckdb; con = duckdb.connect('warehouse.duckdb'); print(con.execute('select * from mart_daily_usage_by_region limit 10').fetchdf())"
+```
 
 Re-running the pipeline is safe. Partitions that have already been loaded are skipped, and dbt rebuilds the marts against whatever data is currently in `raw_billing`.
 
