@@ -51,6 +51,18 @@ A few choices I considered and rejected, in case it comes up:
 
 ## Idempotency
 
+Re-running the pipeline produces the same warehouse state as a single run. This is by design, not a side effect, because reviewers and operators will need to re-run after fixes.
+
+Two mechanisms make this work.
+
+**State table.** A `processed_partitions` table inside `warehouse.duckdb` records every partition that loaded successfully, with its date, source URL, load timestamp, and row count. On each run, the pipeline computes the candidate dates from `START_DATE` to today, reads the state table, and only loads partitions not already there. Skipped 404s are not recorded, so they get retried on every run until the file appears.
+
+**Atomic per-partition load.** Loading one partition is a single transaction: delete any existing rows for that date, insert fresh rows from the CSV, then write the state row. If anything fails midway, the transaction rolls back and the partition stays unprocessed. A crash never leaves `raw_billing` in a half-loaded state.
+
+The combination means you can run `python ingestion/run_pipeline.py` as often as you want. New partitions get added, missing ones get retried, and re-runs against a fully-loaded warehouse do nothing except trigger dbt.
+
+dbt itself is idempotent for free, because every model is either a view (rebuilt on every run) or a table (dropped and recreated on every run).
+
 ## Running the pipeline
 
 Clone the repo and create a virtual environment with Python 3.12. Install dependencies: `pip install -r requirements.txt`
