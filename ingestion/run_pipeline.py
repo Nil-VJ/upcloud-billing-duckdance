@@ -154,7 +154,9 @@ def run_dbt() -> None:
     """Run dbt build against the dbt_project folder."""
     log.info("Running dbt build")
     result = subprocess.run(
-        ["dbt", "build", "--project-dir", str(DBT_PROJECT_DIR)],
+        ["dbt", "build",
+        "--project-dir", str(DBT_PROJECT_DIR),
+        "--profiles-dir", str(DBT_PROJECT_DIR)],
         capture_output=True,
         text=True,
     )
@@ -185,7 +187,7 @@ def main() -> None:
         load_partition(con, d)
 
     con.close()
-    run_dbt()
+    # run_dbt()
     log.info("Pipeline complete")
 
 
