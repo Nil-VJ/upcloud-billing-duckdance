@@ -49,6 +49,24 @@ A few choices I considered and rejected, in case it comes up:
 
 ## Data model
 
+The pipeline produces four dbt models in three layers.
+
+**Staging.** One model, `stg_billing`. A view over `raw_billing` that does light cleanup: renames `timestamp` to `operation_at` (avoiding the SQL reserved word), derives `operation_date` from the timestamp, flips `credit_usage` from negative to positive and renames it `credit_used`, and pre-casts `success` to an integer column `is_success_int` so marts can compute success rates with `AVG`. One row per billed operation.
+
+**Intermediate.** One model, `int_billing_enriched`. A view over `stg_billing` that drops the redundant `year`, `month`, and `day` columns (covered by `operation_date`) and acts as the stable contract between staging and marts. The layer is thin in this project because there is little business logic to add for the current marts. It exists so that future derived columns have a home that does not force every mart to change.
+
+**Marts.** Two tables, materialized for fast reads.
+
+`mart_daily_usage_by_region` has one row per `(operation_date, region, currency)` and reports total credits used, operation count, and success rate. The use case is regional capacity and revenue trends.
+
+`mart_usage_by_service_tier` has one row per `(operation_date, service_tier, operation_type, currency)` and reports total credits, average credits per operation, and operation count. The use case is finance and unit economics by tier.
+
+Both marts group by currency because the dataset contains three currencies (JPY, USD, EUR) in roughly equal proportions. Summing credits across currencies would produce a number that looks like a total but is not one. Per-currency aggregation is the only honest answer.
+
+### Tests
+
+Each model declares `not_null` tests on the columns that downstream models depend on. The full pipeline runs 16 tests and they all execute in under half a second against the current dataset. Composite uniqueness on mart grain columns is guaranteed by the `GROUP BY` and would otherwise require the `dbt_utils` package, which I deliberately did not pull in for a 3-hour build.
+
 ## Idempotency
 
 Re-running the pipeline produces the same warehouse state as a single run. This is by design, not a side effect, because reviewers and operators will need to re-run after fixes.
