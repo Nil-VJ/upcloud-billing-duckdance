@@ -1,0 +1,15 @@
+version: 2
+
+models:
+  - name: int_billing_enriched
+    description: "Staging billing data with redundant partition columns dropped. Source for marts."
+    columns:
+      - name: operation_date
+        tests:
+          - not_null
+      - name: credit_used
+        tests:
+          - not_null
+      - name: currency
+        tests:
+          - not_null
