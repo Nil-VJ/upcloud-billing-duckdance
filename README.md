@@ -144,6 +144,8 @@ dbt generates both for free from the model files and YAML metadata.
 
 The lineage graph shows the full DAG: `raw.raw_billing` (the source) flows into `stg_billing`, which flows into `int_billing_enriched`, which feeds both marts. Useful for two things in practice: explaining to a non-engineer where a number on a dashboard comes from, and troubleshooting when a test fails by walking back upstream until the bad input is found.
 
+![dbt lineage graph: raw_billing flows through staging and intermediate to two marts](docs/lineage.png)
+
 Generate and view the docs with:
 
 ```
