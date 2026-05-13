@@ -1,0 +1,30 @@
+version: 2
+
+models:
+  - name: stg_billing
+    description: "Cleaned billing events. One row per billed operation."
+    columns:
+      - name: operation_at
+        description: "When the operation happened."
+        tests:
+          - not_null
+      - name: operation_date
+        description: "Date of the operation, derived from operation_at."
+        tests:
+          - not_null
+      - name: credit_used
+        description: "Credits consumed by the operation. Positive."
+        tests:
+          - not_null
+      - name: region
+        description: "UpCloud region."
+        tests:
+          - not_null
+      - name: currency
+        description: "Billing currency."
+        tests:
+          - not_null
+      - name: user_id
+        description: "UpCloud user ID. PII — see README."
+        tests:
+          - not_null

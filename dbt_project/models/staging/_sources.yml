@@ -1,0 +1,36 @@
+version: 2
+
+sources:
+  - name: raw
+    description: "Tables loaded by the Python ingestion pipeline."
+    database: warehouse
+    schema: main
+    tables:
+      - name: raw_billing
+        description: "Daily billing CSVs ingested from UpCloud Object Storage. One row per billed operation."
+        columns:
+          - name: timestamp
+            description: "When the operation happened."
+          - name: resource_id
+            description: "ID of the resource being billed."
+          - name: user_id
+            description: "UpCloud user ID. Personal data under GDPR — see README."
+          - name: credit_usage
+            description: "Credits consumed. Negative in source data; flipped to positive in staging."
+          - name: region
+            description: "UpCloud region code."
+          - name: service_tier
+            description: "Service tier of the resource."
+          - name: operation_type
+            description: "What kind of operation was performed."
+          - name: success
+            description: "Whether the operation succeeded."
+          - name: resource_type
+            description: "Type of the billed resource."
+          - name: invoice_id
+            description: "Invoice the operation belongs to."
+          - name: currency
+            description: "Billing currency for this row."
+          - name: year
+          - name: month
+          - name: day
