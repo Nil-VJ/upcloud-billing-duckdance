@@ -187,7 +187,7 @@ def main() -> None:
         load_partition(con, d)
 
     con.close()
-    # run_dbt()
+    run_dbt()
     log.info("Pipeline complete")
 
 
