@@ -36,7 +36,7 @@ This checks that the dbt project config, profile, and DuckDB connection are all 
 
 ## Architecture
 
-The pipeline has four layers: storage, compute, transformation, and orchestration. Each layer was picked to keep the architecture light and the dependencies few. The assignment explicitly asks for this and I agree with it for a dataset of this size.
+The pipeline has four layers: storage, compute, transformation, and orchestration. Each layer was picked to keep the architecture light and the dependencies few. Right fit for a dataset of this size.
 
 ### Storage
 
