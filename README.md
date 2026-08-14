@@ -52,11 +52,10 @@ The honest trade-off: DuckDB is fast for analytical queries but is single-node. 
 
 ### Transformation: dbt with the dbt-duckdb adapter
 
-dbt structures the SQL transformations into staging, intermediate, and marts layers. Three reasons I chose this over plain SQL scripts:
+dbt structures the SQL transformations into staging, intermediate, and marts layers. Two reasons I chose this over plain SQL scripts:
 
 1. Tests come for free. Schema tests like `not_null` and `unique` and custom data tests run with `dbt test`.
 2. Lineage comes for free. `dbt docs generate` builds a model-level DAG you can browse.
-3. The pattern matches what UpCloud already uses. The job description mentions dbt explicitly.
 
 The dbt-duckdb adapter is the bridge. It is community-maintained, and lets dbt treat DuckDB as a warehouse.
 
